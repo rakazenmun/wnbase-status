@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status Page</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #6b7280;
+    --card-bg: #f9fafb;
+    --border: #e5e7eb;
+    --green: #16a34a;
+    --green-bg: #dcfce7;
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --yellow: #ca8a04;
+    --yellow-bg: #fef9c3;
+    --shadow: rgba(0,0,0,0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --text: #e6edf3;
+      --text-secondary: #8b949e;
+      --card-bg: #161b22;
+      --border: #30363d;
+      --green: #3fb950;
+      --green-bg: #1a2e20;
+      --red: #f85149;
+      --red-bg: #2d1618;
+      --yellow: #d29922;
+      --yellow-bg: #2d2410;
+      --shadow: rgba(0,0,0,0.3);
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 24px 16px 64px;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  header p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-top: 4px;
+  }
+
+  .banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    margin-bottom: 28px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .banner.operational {
+    background: var(--green-bg);
+    color: var(--green);
+    border-color: transparent;
+  }
+
+  .banner.partial {
+    background: var(--yellow-bg);
+    color: var(--yellow);
+    border-color: transparent;
+  }
+
+  .banner.outage {
+    background: var(--red-bg);
+    color: var(--red);
+    border-color: transparent;
+  }
+
+  .banner .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .services {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px var(--shadow);
+  }
+
+  .service-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+  }
+
+  .service-row:last-child {
+    border-bottom: none;
+  }
+
+  .service-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .status-dot.up {
+    background: var(--green);
+    box-shadow: 0 0 0 4px var(--green-bg);
+  }
+
+  .status-dot.down {
+    background: var(--red);
+    box-shadow: 0 0 0 4px var(--red-bg);
+  }
+
+  .status-dot.unknown {
+    background: var(--text-secondary);
+    box-shadow: 0 0 0 4px var(--card-bg);
+  }
+
+  .service-name {
+    font-weight: 500;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .uptime-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .state-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--text-secondary);
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 480px) {
+    header h1 { font-size: 1.25rem; }
+    .service-name { font-size: 0.9rem; }
+    .uptime-text { font-size: 0.8rem; }
+    .banner { font-size: 0.95rem; padding: 14px 16px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Service Status</h1>
+      <p id="last-updated">Checking current status…</p>
+    </header>
+
+    <div id="banner" class="banner">
+      <span class="dot"></span>
+      <span id="banner-text">Loading status…</span>
+    </div>
+
+    <div id="services" class="services">
+      <div class="state-message" id="loading-state">
+        <div class="spinner"></div>
+        <div>Loading monitors…</div>
+      </div>
+    </div>
+
+    <footer>Powered by UptimeRobot &middot; auto-refreshes every 5 minutes</footer>
+  </div>
+
+<script>
+  // -----------------------------------------------------------------------
+  // IMPORTANT SECURITY NOTE:
+  // This is a static, client-side page — anything in this file (including
+  // this API key) is publicly visible to anyone who views the page source.
+  //
+  // You are using a READ-ONLY "Main API Key" here rather than a
+  // monitor-specific key. This means it CANNOT create/edit/delete monitors,
+  // but it CAN read the name, status, and uptime of EVERY monitor on your
+  // account. Only use this if you're fine with all your monitors' names
+  // and statuses being publicly visible — switch to a monitor-specific key
+  // instead if you ever have monitors you'd rather keep private.
+  // -----------------------------------------------------------------------
+  const API_KEY = "ur3654869-cd04399994f5416ee0c3d4ae";
+
+  const API_URL = "https://api.uptimerobot.com/v2/getMonitors";
+  const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
+  const servicesEl = document.getElementById("services");
+  const bannerEl = document.getElementById("banner");
+  const bannerTextEl = document.getElementById("banner-text");
+  const lastUpdatedEl = document.getElementById("last-updated");
+
+  function setBanner(state, text) {
+    bannerEl.className = "banner " + state;
+    bannerTextEl.textContent = text;
+  }
+
+  function showUnavailable(message) {
+    servicesEl.innerHTML = `
+      <div class="state-message">
+        <div>⚠️ ${message || "Status temporarily unavailable."}</div>
+      </div>`;
+    setBanner("outage", "Status Unavailable");
+    lastUpdatedEl.textContent = "Could not fetch latest status.";
+  }
+
+  function renderMonitors(monitors) {
+    if (!monitors || monitors.length === 0) {
+      showUnavailable("No monitors found.");
+      return;
+    }
+
+    let upCount = 0;
+    let downCount = 0;
+
+    const rows = monitors.map(monitor => {
+      // UptimeRobot status codes: 2 = up, 9 = down, others = paused/pending/etc.
+      const isUp = monitor.status === 2;
+      const isDown = monitor.status === 9;
+
+      if (isUp) upCount++;
+      if (isDown) downCount++;
+
+      const dotClass = isUp ? "up" : (isDown ? "down" : "unknown");
+
+      const ratio = monitor.custom_uptime_ratio;
+      const uptimeText = (ratio !== undefined && ratio !== null && ratio !== "")
+        ? `${parseFloat(ratio).toFixed(2)}% uptime`
+        : "No data";
+
+      return `
+        <div class="service-row">
+          <div class="service-left">
+            <span class="status-dot ${dotClass}"></span>
+            <span class="service-name">${escapeHtml(monitor.friendly_name)}</span>
+          </div>
+          <span class="uptime-text">${uptimeText}</span>
+        </div>`;
+    }).join("");
+
+    servicesEl.innerHTML = rows;
+
+    if (downCount === 0) {
+      setBanner("operational", "All Systems Operational");
+    } else if (upCount === 0) {
+      setBanner("outage", "Major Outage");
+    } else {
+      setBanner("partial", "Partial Outage");
+    }
+
+    lastUpdatedEl.textContent = "Last updated: " + new Date().toLocaleTimeString();
+  }
+
+  function escapeHtml(str) {
+    if (typeof str !== "string") return "";
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  async function fetchStatus() {
+    if (!API_KEY || API_KEY === "YOUR_READ_ONLY_API_KEY") {
+      showUnavailable("Status temporarily unavailable.");
+      return;
+    }
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s safety timeout
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          api_key: API_KEY,
+          format: "json",
+          custom_uptime_ratios: "30",
+          limit: "50" // UptimeRobot's max allowed value per request
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error("Network response was not OK: " + response.status);
+      }
+
+      const data = await response.json();
+
+      if (data.stat !== "ok") {
+        throw new Error(
+          (data.error && data.error.message) || "UptimeRobot API returned an error."
+        );
+      }
+
+      renderMonitors(data.monitors);
+    } catch (err) {
+      console.error("Failed to fetch status:", err);
+      showUnavailable("Status temporarily unavailable.");
+    }
+  }
+
+  fetchStatus();
+  setInterval(fetchStatus, REFRESH_INTERVAL_MS);
+</script>
+
+</body>
+</html>
